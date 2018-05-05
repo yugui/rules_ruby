@@ -16,6 +16,12 @@ ruby_library(
 )
 
 ruby_library(
+    name = "use_native",
+    srcs = ["use_native.rb"],
+    deps = ["@bundler_test//:libs"],
+)
+
+ruby_library(
     name = "version",
     srcs = ["version.rb"],
 )

@@ -11,6 +11,7 @@ ruby_library(
     includes = ["examples/lib"],
     deps = [
         "//examples/lib/foo:bar",
+        "//examples/lib/foo:use_native",
         "//examples/lib/foo:version",
     ],
 )

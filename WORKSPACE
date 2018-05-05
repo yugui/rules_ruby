@@ -8,6 +8,10 @@ load("@com_github_yugui_rules_ruby//ruby/private:bundle.bzl", "bundle_install")
 
 bundle_install(
     name = "bundler_test",
+    excludes = {
+        "jsonnet": ["ext/**/*"],
+        "mini_portile2": ["test/**/*"],
+    },
     gemfile = "//:examples/Gemfile",
     gemfile_lock = "//:examples/Gemfile.lock",
 )
