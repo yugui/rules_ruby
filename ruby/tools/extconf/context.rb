@@ -25,6 +25,10 @@ module Extconf
       end
     end
 
+    def variable(name)
+      @variables[name]
+    end
+
     def set_variable(name, definition)
       @variables[name] = Variable.new(name, definition)
     end

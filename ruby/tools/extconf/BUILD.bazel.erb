@@ -1,0 +1,29 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "<%= name %>",
+    srcs = [
+      <%- srcs.each do |src| -%>
+        <%= src.dump %>,
+      <%- end -%>
+      <%- hdrs.each do |src| -%>
+        <%= src.dump %>,
+      <%- end -%>
+    ],
+    copts = [
+      <%- copts.each do |flag| -%>
+        <%= flag.dump %>,
+      <%- end -%>
+    ],
+    linkopts = [
+      <%- ldflags.each do |flag| -%>
+        <%= flag.dump %>,
+      <%- end -%>
+    ],
+    deps = [
+      <%- deps.each do |dep| -%>
+        <%= dep.dump %>,
+      <%- end -%>
+    ],
+)
+# vim: set ft=bzl :

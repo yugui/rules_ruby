@@ -2,19 +2,20 @@ require_relative 'variable'
 require_relative 'target'
 
 module Extconf
-  # An insufficient and inefficient parser of Makefile,
-  # which is, however good enough to deal with Makefiles
-  # mkmf generates.
-  class MakefileParser
-    def initialize(io)
-      @io = io
+  class Makefile
+    def initialize(context, target_defs)
+      @context = context
+      @target_defs
     end
 
-    def parse
+    # An insufficient and inefficient parser of Makefile,
+    # which is, however just good enough to deal with Makefiles
+    # mkmf generates.
+    def self.parse(io)
       context = Context.new
       target_defs = []
       last_target = nil
-      each_line do |line|
+      MakefileReader.new(io).each_line do |line|
         if line[/^([[:alpha:]][[:alnum:]_]*)\s*=\s*(.*)/]
           name, defn = $1, $2
           context.set_variable(name, defn)
@@ -45,10 +46,11 @@ module Extconf
 
         raise "huh? #{line.inspect}"
       end
-      context.each_variable do |name, var|
-        puts "#{name} = #{var.evaluate(context)}"
-      end
 
+      self.new(context, target_defs)
+    end
+
+    def targets
       targets = {}
       target_defs.each do |t|
         t.names(context).each do |name|
@@ -66,30 +68,33 @@ module Extconf
         end
       end
 
-      targets.each do |name, target|
-        p target
-      end
+      targets
     end
 
-    private
+    def value(name)
+      var = @context.variable(name)
+      var && var.evaluate(@context)
+    end
 
-    def each_line
-      last = ""
-      @io.each_line do |line|
-        next if line.start_with?('#')
-        last += line.chomp
-        if line.end_with?("\\")
-          last[-1] = ''
-        else
-          yield last
-          last = ""
-        end
+    class MakefileReader
+      def initialize(io)
+        @io = io
       end
-      yield last if last != ""
+
+      def each_line
+        last = ""
+        @io.each_line do |line|
+          next if line.start_with?('#')
+          last += line.chomp
+          if line.end_with?("\\")
+            last[-1] = ''
+          else
+            yield last
+            last = ""
+          end
+        end
+        yield last if last != ""
+      end
     end
   end
-end
-
-if $0 == __FILE__
-  Extconf::MakefileParser.new($<).parse
 end
