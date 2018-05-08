@@ -25,6 +25,20 @@ def _list_libdirs(ruby):
   rel_paths = [_relativate(path) for path in paths]
   return (paths, rel_paths)
 
+def _install_dir(ctx, ruby, name):
+  path = ruby.rbconfig(ruby, name)
+  rel_path = _relativate(path)
+  if not ctx.path(rel_path).exists:
+    ctx.symlink(path, rel_path)
+  return rel_path
+
+def _maybe_path(ctx, path):
+  path = ctx.path(path)
+  if path.exists:
+    return str(path)
+  else:
+    return None
+
 INTERPRETER_WRAPPER = """
 #!/bin/sh
 DIR=`dirname $0`
@@ -48,6 +62,19 @@ def _install_host_ruby(ctx, ruby):
 
   ctx.file("loadpath.lst", "\n".join(rel_paths))
 
+  return struct(
+      includedir = _install_dir(ctx, ruby, "includedir"),
+      libdir = _install_dir(ctx, ruby, "libdir"),
+      static_library = _maybe_path(
+          ctx,
+          _relativate(ruby.expand_rbconfig(ruby, '${libdir}/${LIBRUBY_A}')),
+      ),
+      shared_library = _maybe_path(
+          ctx,
+          _relativate(ruby.expand_rbconfig(ruby, '${libdir}/${LIBRUBY_SO}')),
+      ),
+  )
+
 
 def _ruby_host_runtime_impl(ctx):
   # Locates path to the interpreter
@@ -63,7 +90,7 @@ def _ruby_host_runtime_impl(ctx):
 
   ruby = ruby_repository_context(ctx, interpreter_path)
 
-  _install_host_ruby(ctx, ruby)
+  installed = _install_host_ruby(ctx, ruby)
   install_bundler(
       ctx,
       interpreter_path,
@@ -77,6 +104,9 @@ def _ruby_host_runtime_impl(ctx):
       substitutions = {
           "{ruby_path}": repr(ruby.rel_interpreter_path),
           "{ruby_basename}": repr(ruby.interpreter_name),
+          "{hdrs}": repr(installed.includedir + "/**/*.h"),
+          "{static_library}": repr(installed.static_library),
+          "{shared_library}": repr(installed.shared_library),
       },
   )
 
