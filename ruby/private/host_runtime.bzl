@@ -33,9 +33,8 @@ def _install_dir(ctx, ruby, name):
   return rel_path
 
 def _maybe_path(ctx, path):
-  path = ctx.path(path)
-  if path.exists:
-    return str(path)
+  if ctx.path(path).exists:
+    return path
   else:
     return None
 
@@ -55,16 +54,20 @@ def _install_host_ruby(ctx, ruby):
       executable = True,
   )
 
-  paths, rel_paths = _list_libdirs(ruby)
-  for i, (path, rel_path) in enumerate(zip(paths, rel_paths)):
-    if not _is_subpath(rel_path, rel_paths[:i]):
-      ctx.symlink(path, rel_path)
+  includedir = _install_dir(ctx, ruby, "includedir")
+  libdir = _install_dir(ctx, ruby, "libdir")
+  rubyhdrdir = _install_dir(ctx, ruby, "rubyhdrdir")
 
+  paths, rel_paths = _list_libdirs(ruby)
+  for path, rel_path in zip(paths, rel_paths):
+    if not ctx.path(rel_path).exists:
+       ctx.symlink(path, rel_path)
   ctx.file("loadpath.lst", "\n".join(rel_paths))
 
   return struct(
-      includedir = _install_dir(ctx, ruby, "includedir"),
-      libdir = _install_dir(ctx, ruby, "libdir"),
+      includedir = includedir,
+      libdir = libdir,
+      rubyhdrdir = rubyhdrdir,
       static_library = _maybe_path(
           ctx,
           _relativate(ruby.expand_rbconfig(ruby, '${libdir}/${LIBRUBY_A}')),
@@ -102,9 +105,11 @@ def _ruby_host_runtime_impl(ctx):
       'BUILD.bazel',
       ctx.attr._buildfile_template,
       substitutions = {
-          "{ruby_path}": repr(ruby.rel_interpreter_path),
-          "{ruby_basename}": repr(ruby.interpreter_name),
-          "{hdrs}": repr(installed.includedir + "/**/*.h"),
+          "{ruby_path}": ruby.rel_interpreter_path,
+          "{ruby_basename}": ruby.interpreter_name,
+          "{libdir}": installed.libdir,
+          "{rubyhdrdir}": installed.rubyhdrdir,
+          "{header_glob}": installed.rubyhdrdir, 
           "{static_library}": repr(installed.static_library),
           "{shared_library}": repr(installed.shared_library),
       },
