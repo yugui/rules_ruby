@@ -1,17 +1,21 @@
-def _eval_ruby(ruby, script, options=None):
-  arguments = ['env', '-i', ruby.interpreter_realpath]
-  if options:
-    arguments.extend(options)
-  arguments.extend(['-e', script])
-
+def _run_ruby(ruby, args):
+  arguments = ['env', '-i', ruby.interpreter_realpath] + args
   environment = {"RUBYOPT": "--disable-gems"}
 
   result = ruby._ctx.execute(arguments, environment=environment)
   if result.return_code:
-    message = "Failed to evaluate ruby snippet with {}: {}".format(
+    message = "Failed to run a ruby script with {}: {}".format(
         ruby.interpreter_realpath, result.stderr)
     fail(message)
   return result.stdout
+
+
+def _eval_ruby(ruby, script, options=None):
+  arguments = []
+  if options:
+    arguments.extend(options)
+  arguments.extend(['-e', script])
+  return _run_ruby(ruby, arguments)
 
 
 def _rbconfig(ruby, name):
@@ -51,6 +55,7 @@ def ruby_repository_context(repository_ctx, interpreter_path):
       # Standard repository structure for ruby runtimes
 
       # Helper methods
+      run = _run_ruby,
       eval = _eval_ruby,
       rbconfig = _rbconfig,
       expand_rbconfig = _expand_rbconfig,

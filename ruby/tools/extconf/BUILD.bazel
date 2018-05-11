@@ -1,13 +1,20 @@
 package(default_visibility = ["//visibility:public"])
 
+genrule(
+    name = "place_jsonnet_wrap",
+    srcs = [":jsonnet_wrap_bin"],
+    outs = ["jsonnet_wrap.bundle"],
+    cmd = "cp $< $@",
+)
+
 apple_binary(
-    name = "jsonnet_wrap",
+    name = "jsonnet_wrap_bin",
     binary_type = "loadable_bundle",
     platform_type = "macos",
     deps = [
         ":jsonnet_wrap_lib",
-        "@jsonnet//core:libjsonnet",
-        "@org_ruby_lang_ruby_host//:libruby",
+        #"@jsonnet//core:libjsonnet",
+        #"@org_ruby_lang_ruby_host//:libruby",
     ],
 )
 
@@ -64,21 +71,22 @@ cc_library(
         "bazel-out/darwin-fastbuild/bin/external/org_ruby_lang_ruby_host/_virtual_includes/ruby_hdrs",
         "bazel-out/darwin-fastbuild/bin/external/org_ruby_lang_ruby_host/_virtual_includes/ruby_hdrs/ruby/backward",
         "bazel-out/darwin-fastbuild/bin/external/org_ruby_lang_ruby_host/_virtual_includes/ruby_hdrs/x86_64-darwin17",
-        "external/org_ruby_lang_ruby_host/Users/yugui/.rbenv/versions/2.5.0/include/ruby-2.5.0",
-        "external/org_ruby_lang_ruby_host/Users/yugui/.rbenv/versions/2.5.0/include/ruby-2.5.0/ruby/backward",
-        "external/org_ruby_lang_ruby_host/Users/yugui/.rbenv/versions/2.5.0/include/ruby-2.5.0/x86_64-darwin17",
     ],
     linkopts = [
-        "-lgmp",
+        #"-lgmp",
         "-L.",
         # "-L/Users/yugui/.rbenv/versions/2.5.0/lib",
+        #"-Lexternal/org_ruby_lang_ruby_host/usr/local/opt/gmp/lib",
         "-fstack-protector",
         #"-L/usr/local/lib",
+        "-Wl,-undefined,dynamic_lookup",
+        "-Wl,-multiply_defined,suppress",
     ],
     linkstatic = True,
     deps = [
         "@jsonnet//core:libjsonnet",
-        "@org_ruby_lang_ruby_host//:libruby",
+        "@org_ruby_lang_ruby_host//:ruby_hdrs",
+        #"@org_ruby_lang_ruby_host//:libruby",
     ],
     alwayslink = True,
 )

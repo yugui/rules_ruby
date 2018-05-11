@@ -23,6 +23,7 @@ cc_library(
     deps = [
         ":ruby_hdrs",
         ":libruby_import",
+        ":libruby_deps",
     ],
 )
 
@@ -30,7 +31,7 @@ cc_library(
     name = "ruby_hdrs",
     hdrs = glob(["{header_glob}/**/*.h"]),
     #strip_include_prefix = "{rubyhdrdir}",
-    visibility = ["//visibility:private"],
+    #visibility = ["//visibility:private"],
     #includes = ["x86_64-darwin17"],
     includes = [
         "{rubyhdrdir}",
@@ -43,6 +44,11 @@ cc_import(
     static_library = {static_library},
     shared_library = {shared_library},
     visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "libruby_deps",
+    srcs = {dependent_libraries},
 )
 
 filegroup(
@@ -62,7 +68,7 @@ filegroup(
           "loadpath.lst",
           "BUILD.bazel",
           "WORKSPACE",
-          "{libdir}/**/gems/*/doc/**/*",
+          "{libdir}/**/gems/**/*",
         ],
     ),
 )

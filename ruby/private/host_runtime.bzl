@@ -25,12 +25,19 @@ def _list_libdirs(ruby):
   rel_paths = [_relativate(path) for path in paths]
   return (paths, rel_paths)
 
-def _install_dir(ctx, ruby, name):
-  path = ruby.rbconfig(ruby, name)
+def _list_dylibs(ctx, ruby):
+  """List the paths to the dynamic libraries which libruby depends on"""
+  return ruby.run(ruby, [ctx.path(ctx.attr._list_dylibs)]).split("\n")
+
+def _install(ctx, path):
   rel_path = _relativate(path)
   if not ctx.path(rel_path).exists:
     ctx.symlink(path, rel_path)
   return rel_path
+
+def _install_dir(ctx, ruby, name):
+  path = ruby.rbconfig(ruby, name)
+  return _install(ctx, path)
 
 def _maybe_path(ctx, path):
   if ctx.path(path).exists:
@@ -64,6 +71,10 @@ def _install_host_ruby(ctx, ruby):
        ctx.symlink(path, rel_path)
   ctx.file("loadpath.lst", "\n".join(rel_paths))
 
+  dylibs = []
+  for dylib in _list_dylibs(ctx, ruby):
+    dylibs.append(_install(ctx, dylib))
+
   return struct(
       includedir = includedir,
       libdir = libdir,
@@ -76,6 +87,7 @@ def _install_host_ruby(ctx, ruby):
           ctx,
           _relativate(ruby.expand_rbconfig(ruby, '${libdir}/${LIBRUBY_SO}')),
       ),
+      dependent_libraries = dylibs,
   )
 
 
@@ -112,6 +124,7 @@ def _ruby_host_runtime_impl(ctx):
           "{header_glob}": installed.rubyhdrdir, 
           "{static_library}": repr(installed.static_library),
           "{shared_library}": repr(installed.shared_library),
+          "{dependent_libraries}": repr(installed.dependent_libraries),
       },
   )
 
@@ -122,6 +135,10 @@ ruby_host_runtime = repository_rule(
 
         "_init_loadpath_rb": attr.label(
             default = "@com_github_yugui_rules_ruby//:ruby/tools/init_loadpath.rb",
+            allow_single_file = True,
+        ),
+        "_list_dylibs": attr.label(
+            default = "@com_github_yugui_rules_ruby//:ruby/private/list-dylibs.rb",
             allow_single_file = True,
         ),
         "_install_bundler": attr.label(
