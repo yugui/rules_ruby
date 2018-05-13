@@ -29,7 +29,7 @@ cc_library(
 
 cc_library(
     name = "ruby_hdrs",
-    hdrs = glob(["{header_glob}/**/*.h"]),
+    hdrs = glob(["{rubyhdrdir}/**/*.h"]),
     #strip_include_prefix = "{rubyhdrdir}",
     #visibility = ["//visibility:private"],
     #includes = ["x86_64-darwin17"],

@@ -121,7 +121,6 @@ def _ruby_host_runtime_impl(ctx):
           "{ruby_basename}": ruby.interpreter_name,
           "{libdir}": installed.libdir,
           "{rubyhdrdir}": installed.rubyhdrdir,
-          "{header_glob}": installed.rubyhdrdir, 
           "{static_library}": repr(installed.static_library),
           "{shared_library}": repr(installed.shared_library),
           "{dependent_libraries}": repr(installed.dependent_libraries),
