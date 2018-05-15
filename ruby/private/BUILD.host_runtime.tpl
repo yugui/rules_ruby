@@ -5,10 +5,12 @@ load(
 
 package(default_visibility = ["//visibility:public"])
 
+exports_files(["bin/ruby"])
+
 sh_binary(
     name = "ruby_bin",
     srcs = ["{ruby_basename}"],
-    data = ["{ruby_path}", ":runtime"],
+    data = ["{ruby_path}", ":bin/ruby", ":runtime"],
 )
 
 # exports_files(["init_loadpath.rb"])

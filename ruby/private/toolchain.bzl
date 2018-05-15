@@ -1,8 +1,11 @@
 def _ruby_toolchain_impl(ctx):
   return [platform_common.ToolchainInfo(
-      interpreter = ctx.attr.interpreter,
-      runtime = ctx.files.runtime,
+      interpreter = ctx.executable.interpreter,
+      interpreter_rule = ctx.attr.interpreter,
+      runtime = ctx.attr.runtime,
       init_files = ctx.attr.init_files,
+      bundler = ctx.attr.bundler,
+      rubyopt = ctx.attr.rubyopt,
   )]
 
 _ruby_toolchain = rule(
@@ -10,15 +13,15 @@ _ruby_toolchain = rule(
     attrs = {
         "interpreter": attr.label(
             mandatory = True,
-            allow_files = True,
+            allow_single_file = True,
             executable = True,
-            cfg = "target",
+            cfg = "host",
         ),
         "bundler": attr.label(
             mandatory = True,
-            allow_files = True,
+            allow_single_file = True,
             executable = True,
-            cfg = "target",
+            cfg = "host",
         ),
         "init_files": attr.label_list(
             allow_files = True,
@@ -27,7 +30,7 @@ _ruby_toolchain = rule(
         "runtime": attr.label(
             mandatory = True,
             allow_files = True,
-            cfg = "target",
+            cfg = "host",
         ),
         "rubyopt": attr.string_list(
             default = [],

@@ -48,16 +48,17 @@ def _maybe_path(ctx, path):
 INTERPRETER_WRAPPER = """
 #!/bin/sh
 DIR=`dirname $0`
-exec $DIR/%s $*
+exec $DIR/bin/ruby $*
 """
 
 def _install_host_ruby(ctx, ruby):
   # Places SDK
   ctx.symlink(ctx.attr._init_loadpath_rb, "init_loadpath.rb")
   ctx.symlink(ruby.interpreter_realpath, ruby.rel_interpreter_path)
+  ctx.symlink(ruby.rel_interpreter_path, "bin/ruby")
   ctx.file(
       ruby.interpreter_name,
-      INTERPRETER_WRAPPER % ruby.rel_interpreter_path,
+      INTERPRETER_WRAPPER, #% ruby.rel_interpreter_path,
       executable = True,
   )
 

@@ -1,10 +1,10 @@
 workspace(name = "com_github_yugui_rules_ruby")
 
-load("@com_github_yugui_rules_ruby//ruby:def.bzl", "ruby_register_toolchains")
+load("@//ruby:def.bzl", "ruby_register_toolchains")
 
 ruby_register_toolchains()
 
-load("@com_github_yugui_rules_ruby//ruby/private:bundle.bzl", "bundle_install")
+load("@//ruby/private:bundle.bzl", "bundle_install")
 
 bundle_install(
     name = "bundler_test",
@@ -14,6 +14,7 @@ bundle_install(
     },
     gemfile = "//:examples/Gemfile",
     gemfile_lock = "//:examples/Gemfile.lock",
+    rules_ruby_workspace = "@",
 )
 
 http_archive(

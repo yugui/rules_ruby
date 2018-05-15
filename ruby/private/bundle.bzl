@@ -21,6 +21,7 @@ def bundle_install_impl(ctx):
       'env', '-i',
       ctx.path(ruby),
       '--disable-gems',
+      '-r', ctx.path(ctx.attr._ext_disabler),
       '-I', ctx.path(bundler).dirname.dirname.get_child('lib'),
       ctx.path(bundler),
       'install',
@@ -45,6 +46,7 @@ def bundle_install_impl(ctx):
       substitutions = {
           "{repo_name}": ctx.name,
           "{exclude}": repr(exclude),
+          "{workspace_name}": ctx.attr.rules_ruby_workspace,
       },
   )
 
@@ -67,8 +69,17 @@ bundle_install = repository_rule(
             doc = "List of glob patterns per gem to be excluded from the library",
         ),
 
+        "rules_ruby_workspace": attr.string(
+            default = "@com_github_yugui_rules_ruby",
+            doc = "The workspace name of rules_ruby. Just a workaround of bazelbuild/bazel#3493",
+        ),
+
         "_buildfile_template": attr.label(
             default = "@com_github_yugui_rules_ruby//ruby/private:bundle_buildfile.tpl",
+            allow_single_file = True,
+        ),
+        "_ext_disabler": attr.label(
+            default = "@com_github_yugui_rules_ruby//ruby/private:bundler-hook.rb",
             allow_single_file = True,
         ),
     },
