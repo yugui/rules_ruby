@@ -5,7 +5,7 @@ module Extconf
   class Makefile
     def initialize(context, target_defs)
       @context = context
-      @target_defs
+      @target_defs = target_defs
     end
 
     # An insufficient and inefficient parser of Makefile,
@@ -52,7 +52,7 @@ module Extconf
 
     def targets
       targets = {}
-      target_defs.each do |t|
+      @target_defs.each do |t|
         t.names(context).each do |name|
           deps = t.deps(context)
           commands = t.commands(context)
