@@ -90,11 +90,11 @@ ruby_host_runtime = repository_rule(
             allow_single_file = True,
         ),
         "_install_bundler": attr.label(
-            default = "@com_github_yugui_rules_ruby//ruby/private:install-bundler.rb",
+            default = "@com_github_yugui_rules_ruby//ruby/private/runtimes:install-bundler.rb",
             allow_single_file = True,
         ),
         "_buildfile_template": attr.label(
-            default = "@com_github_yugui_rules_ruby//ruby/private:BUILD.host_runtime.tpl",
+            default = "@com_github_yugui_rules_ruby//ruby/private/runtimes:BUILD.host_runtime.tpl",
             allow_single_file = True,
         ),
     },

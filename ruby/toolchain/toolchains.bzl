@@ -1,5 +1,5 @@
 load(
-    "//ruby/private:host_runtime.bzl",
+    "//ruby/private/runtimes:host_runtime.bzl",
     _ruby_host_runtime = "ruby_host_runtime",
 )
 
