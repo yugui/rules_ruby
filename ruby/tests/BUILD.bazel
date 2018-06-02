@@ -2,12 +2,6 @@ load(
     "//ruby:def.bzl",
     "ruby_binary",
 )
-load(
-    ":action_test.bzl",
-    "run_ruby",
-)
-
-package(default_visibility = ["//visibility:private"])
 
 # Tests if :ruby_bin can run in sh_binary
 sh_test(
@@ -38,11 +32,6 @@ sh_test(
         "bar",
         "baz",
     ],
-)
-
-run_ruby(
-    name = "args_check_action_test",
-    src = "args_check.rb",
 )
 
 ruby_binary(
