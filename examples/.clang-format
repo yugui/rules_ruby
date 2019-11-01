@@ -1,0 +1,6 @@
+---
+# Slightly CRuby-ish Google style
+Language:     Cpp
+BasedOnStyle: Google
+AllowShortFunctionsOnASingleLine: Empty
+
