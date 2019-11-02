@@ -1,0 +1,15 @@
+load(
+    "@com_github_yugui_rules_ruby//ruby:def.bzl",
+    "ruby_test",
+)
+
+ruby_test(
+    name = "baz_test",
+    srcs = ["baz_spec.rb"],
+    main = "baz_spec.rb",
+    rubyopt = ["-rrspec/autorun"],
+    deps = [
+        "//examples/ext/baz:baz",
+        "@bundler_test//:libs",
+    ],
+)

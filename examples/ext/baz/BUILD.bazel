@@ -1,0 +1,6 @@
+load("@com_github_yugui_rules_ruby//ruby:def.bzl", "ruby_extconf_library")
+
+ruby_extconf_library(
+    name = "baz",
+    srcs = ["baz.c"],
+)

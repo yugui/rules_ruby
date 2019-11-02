@@ -11,4 +11,4 @@ else
   exit 1
 fi
 
-$PATH_PREFIX{interpreter} --disable-gems {init_flags} {rubyopt} -I${PATH_PREFIX} {main} "$@"
+$PATH_PREFIX{interpreter} --disable-gems {init_flags} {rubyopt} -I${PATH_PREFIX} ${PATH_PREFIX}{main} "$@"
