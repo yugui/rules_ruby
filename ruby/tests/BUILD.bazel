@@ -146,6 +146,11 @@ ruby_binary(
     srcs = ["diff_test.rb"],
 )
 
+sh_binary(
+    name = "irb",
+    srcs = ["@org_ruby_lang_ruby_host//:irb"],
+)
+
 sh_test(
     name = "irb_test",
     srcs = [":diff_test"],
@@ -155,7 +160,7 @@ sh_test(
         "--golden",
         "$(location //ruby/tests/testdata:irb_golden)",
         "--",
-        "$(location @org_ruby_lang_ruby_host//:irb)",
+        "$(location :irb)",
         "--echo",
         "--noverbose",
         "--prompt=simple",
@@ -163,8 +168,8 @@ sh_test(
         "--nocolorize",
     ],
     data = [
+        ":irb",
         "//ruby/tests/testdata:irb_golden",
         "//ruby/tests/testdata:irb_input",
-        "@org_ruby_lang_ruby_host//:irb",
     ],
 )
