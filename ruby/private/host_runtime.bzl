@@ -36,10 +36,30 @@ def _install_dirs(ctx, ruby, *names):
       ctx.symlink(path, rel_path)
   return rel_paths
 
+def _bin_install_path(ruby, bin):
+  """Transform the given command name "bin" to actual file name.
+
+  Uses the same logic as "script_installer" in tools/rbinstall.rb in Ruby.
+  But it does not currently support RbConfig::CONFIG['program_transform_name']
+  """
+  install_name = ruby.expand_rbconfig(ruby, '${bindir}/${ruby_install_name}')
+  return install_name.replace('ruby', bin, 1)
+
+
+# Commands installed together with ruby command.
+_DEFAULT_SCRIPTS = ["irb", "rdoc", "ri", "erb", "rake", "gem"]
+
 def _install_host_ruby(ctx, ruby):
   # Places SDK
   ctx.symlink(ctx.attr._init_loadpath_rb, "init_loadpath.rb")
   ctx.symlink(ruby.interpreter_realpath, ruby.rel_interpreter_path)
+
+  script_mappings = {}
+  for name in _DEFAULT_SCRIPTS:
+    script_path = _bin_install_path(ruby, name)
+    rel_script_path = _relativate(script_path)
+    script_mappings[name] = rel_script_path
+    ctx.symlink(script_path, rel_script_path)
 
   # Places the interpreter at a predictable place regardless of the actual binary name
   # so that bundle_install can depend on it.
@@ -77,6 +97,7 @@ def _install_host_ruby(ctx, ruby):
       libdirs = rel_paths,
       static_library = _relativate(static_library),
       shared_library = _relativate(shared_library),
+      script_mappings = script_mappings
   )
 
 
@@ -112,6 +133,12 @@ def _ruby_host_runtime_impl(ctx):
           "{hdrs}": repr(["%s/**/*.h" % path for path in installed.includedirs]),
           "{static_library}": repr(installed.static_library),
           "{shared_library}": repr(installed.shared_library),
+          "{irb}": repr(installed.script_mappings["irb"]),
+          "{rdoc}": repr(installed.script_mappings["rdoc"]),
+          "{ri}": repr(installed.script_mappings["ri"]),
+          "{erb}": repr(installed.script_mappings["erb"]),
+          "{rake}": repr(installed.script_mappings["rake"]),
+          "{gem}": repr(installed.script_mappings["gem"]),
           "{rules_ruby_workspace}": RULES_RUBY_WORKSPACE_NAME,
       },
       executable = False,

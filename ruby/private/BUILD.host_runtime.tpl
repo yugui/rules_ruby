@@ -1,6 +1,7 @@
 load(
     "{rules_ruby_workspace}//ruby:defs.bzl",
     "ruby_library",
+    "ruby_binary",
     "ruby_toolchain",
 )
 
@@ -25,6 +26,12 @@ sh_binary(
     name = "ruby_bin",
     srcs = ["ruby"],
     data = [":runtime"],
+)
+
+ruby_binary(
+    name = "irb",
+    srcs = [{irb}],
+    main = {irb},
 )
 
 filegroup(
