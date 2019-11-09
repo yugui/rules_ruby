@@ -5,6 +5,11 @@ load(
 
 package(default_visibility = ["//ruby/tests:__pkg__"])
 
+exports_files([
+    "irb_input",
+    "irb_golden",
+])
+
 #
 # Dependency Graph::
 #

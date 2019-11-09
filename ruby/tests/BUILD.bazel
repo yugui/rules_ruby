@@ -140,3 +140,31 @@ ruby_test(
     }),
     main = "ext_test.rb",
 )
+
+ruby_binary(
+    name = "diff_test",
+    srcs = ["diff_test.rb"],
+)
+
+sh_test(
+    name = "irb_test",
+    srcs = [":diff_test"],
+    args = [
+        "--stdin",
+        "$(location //ruby/tests/testdata:irb_input)",
+        "--golden",
+        "$(location //ruby/tests/testdata:irb_golden)",
+        "--",
+        "$(location @org_ruby_lang_ruby_host//:irb)",
+        "--echo",
+        "--noverbose",
+        "--prompt=simple",
+        "--noreadline",
+        "--nocolorize",
+    ],
+    data = [
+        "//ruby/tests/testdata:irb_golden",
+        "//ruby/tests/testdata:irb_input",
+        "@org_ruby_lang_ruby_host//:irb",
+    ],
+)
