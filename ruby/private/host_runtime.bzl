@@ -46,8 +46,23 @@ def _bin_install_path(ruby, bin):
   return install_name.replace('ruby', bin, 1)
 
 
+def _locate_script(ctx, ruby, gem_name, bin_name):
+  return ruby.run_ruby(
+      ruby,
+      ctx.path(ctx.attr._locate_default_gem).realpath,
+      [gem_name, bin_name],
+  )
+
+
 # Commands installed together with ruby command.
-_DEFAULT_SCRIPTS = ["irb", "rdoc", "ri", "erb", "rake", "gem"]
+_DEFAULT_SCRIPTS = [
+    ("irb", "irb"),
+    ("rdoc", "rdoc"),
+    ("rdoc", "ri"),
+    ("erb", "erb"),
+    ("rake", "rake"),
+    ("rubygems", "gem"),
+]
 
 def _install_host_ruby(ctx, ruby):
   # Places SDK
@@ -55,10 +70,16 @@ def _install_host_ruby(ctx, ruby):
   ctx.symlink(ruby.interpreter_realpath, ruby.rel_interpreter_path)
 
   script_mappings = {}
-  for name in _DEFAULT_SCRIPTS:
-    script_path = _bin_install_path(ruby, name)
+  for (gem_name, bin_name) in _DEFAULT_SCRIPTS:
+    script_path = _locate_script(ctx, ruby, gem_name, bin_name)
+    if not script_path:
+      print("Falling back to bindir")
+      script_path = _bin_install_path(ruby, bin_name)
+    if not script_path:
+      fail("Failed to locate %s" % bin_name)
+
     rel_script_path = _relativate(script_path)
-    script_mappings[name] = rel_script_path
+    script_mappings[bin_name] = rel_script_path
     ctx.symlink(script_path, rel_script_path)
 
   # Places the interpreter at a predictable place regardless of the actual binary name
@@ -117,7 +138,7 @@ def _ruby_host_runtime_impl(ctx):
 
   installed = _install_host_ruby(ctx, ruby)
   install_bundler(
-      ctx,
+      ruby,
       interpreter_path,
       ctx.path(ctx.attr._install_bundler).realpath,
       'bundler',
@@ -156,6 +177,11 @@ ruby_host_runtime = repository_rule(
         ),
         "_install_bundler": attr.label(
             default = "%s//ruby/private:install-bundler.rb" % (
+                RULES_RUBY_WORKSPACE_NAME),
+            allow_single_file = True,
+        ),
+        "_locate_default_gem": attr.label(
+            default = "%s//ruby/private:locate_default_gem.rb" % (
                 RULES_RUBY_WORKSPACE_NAME),
             allow_single_file = True,
         ),
