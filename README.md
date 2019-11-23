@@ -1,5 +1,6 @@
 # Rules ruby
-This repository has moved to https://github.com/bazelruby/rules_ruby. See the new repository.
+This repository used to contain a proof-of-concept version of Ruby rules for Bazel.
+The repository has already moved to https://github.com/bazelruby/rules_ruby. See the new repository.
 
 ## Copyright
 Copyright 2018 Yuki Yugui Sonoda
