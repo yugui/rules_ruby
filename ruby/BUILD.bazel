@@ -1,3 +1,21 @@
+load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
+
 package(default_visibility = ["//visibility:public"])
 
 toolchain_type(name = "toolchain_type")
+
+py_binary(
+    name = "test_script",
+    srcs = ["test.py"],
+    main = "test.py",
+)
+
+sh_test(
+    name = "test_test",
+    srcs = [":test_script"],
+)
+
+pkg_tar(
+    name = "test_script_tar",
+    srcs = [":test_script"],
+)
