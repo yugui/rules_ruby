@@ -1,3 +1,4 @@
+load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
 load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
 
 package(default_visibility = ["//visibility:public"])
@@ -17,5 +18,14 @@ sh_test(
 
 pkg_tar(
     name = "test_script_tar",
-    srcs = [":test_script"],
+    srcs = [
+        "example_js",
+        ":test_script",
+    ],
+)
+
+nodejs_binary(
+    name = "example_js",
+    data = ["example.js"],
+    entry_point = "example.js",
 )
