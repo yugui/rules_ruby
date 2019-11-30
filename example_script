@@ -1,0 +1,12 @@
+:''||<<'batch'
+@echo off
+echo 'batch'
+goto EOF
+batch
+
+if ! [ ]; then
+   echo 'shell'
+fi
+exit 0
+end
+puts 'ruby'

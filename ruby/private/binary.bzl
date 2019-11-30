@@ -29,7 +29,11 @@ def _ruby_binary_impl(ctx):
   executable = ctx.actions.declare_file(ctx.attr.name)
   deps = _transitive_deps(
       ctx,
-      extra_files = init_files + [interpreter, executable],
+      extra_files = init_files + [
+          interpreter,
+          executable,
+          ctx.file._runfiles_bash,
+      ],
       extra_deps = sdk.init_files + [sdk.interpreter],
   )
 
@@ -73,6 +77,10 @@ _ATTRS = {
     "_wrapper_template": attr.label(
       allow_single_file = True,
       default = "binary_wrapper.tpl",
+    ),
+    "_runfiles_bash": attr.label(
+        allow_single_file = True,
+        default = "@bazel_tools//tools/bash/runfiles:runfiles",
     ),
 }
 

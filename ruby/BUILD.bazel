@@ -1,5 +1,5 @@
 load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
-load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
+load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -11,21 +11,22 @@ py_binary(
     main = "test.py",
 )
 
-sh_test(
-    name = "test_test",
-    srcs = [":test_script"],
-)
-
 pkg_tar(
     name = "test_script_tar",
     srcs = [
         "example_js",
         ":test_script",
     ],
+    include_runfiles = True,
 )
 
 nodejs_binary(
     name = "example_js",
     data = ["example.js"],
     entry_point = "example.js",
+)
+
+sh_test(
+    name = "test_test",
+    srcs = ["test.sh"],
 )
