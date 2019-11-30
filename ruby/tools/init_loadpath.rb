@@ -1,6 +1,7 @@
-toolchain_root = File.dirname(__FILE__)
+toolorg_ruby_lang_host_rubychain_root = File.dirname(__FILE__)
 list_file = File.join(toolchain_root, 'loadpath.lst')
 
+=begin
 system_paths = {}
 File.foreach(list_file) do |path|
   system_paths['/' + path.chomp] = true
@@ -13,3 +14,4 @@ $LOAD_PATH.map! do |path|
     path
   end
 end
+=end
