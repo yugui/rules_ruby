@@ -1,4 +1,4 @@
-#!/usr/bin/env pythonn
+#!/usr/bin/env ruby
 
 # Ruby-port of the Bazel's wrapper script for Python
 
@@ -18,14 +18,15 @@
 # limitations under the License.
 #
 
+require 'rbconfig'
 
-def find_module_space
+def find_runfiles
   stub_filename = File.absolute_path($0)
-  module_space = "#{stub_filename}.runfiles"
+  runfiles = "#{stub_filename}.runfiles"
   loop do
     case
-    when File.dir?(module_space)
-      return module_space
+    when File.directory?(runfiles)
+      return runfiles
     when %r!(.*\.runfiles)/.*!o =~ stub_filename
       return $1
     when File.symlink?(stub_filename)
@@ -38,12 +39,75 @@ def find_module_space
   raise "Cannot find .runfiles directory for #{$0}"
 end
 
-def main(args)
-  module_space = find_module_space
+def create_loadpath_entries(custom, runfiles)
+  [runfiles] + custom.map {|path| File.join(runfiles, path) }
 end
 
-if $0 == __file__
+def get_repository_imports(runfiles)
+  Dir.children(runfiles).select {|d| File.directory? d }
+end
+
+# Finds the runfiles manifest or the runfiles directory.
+def runfiles_envvar(runfiles)
+  # If this binary is the data-dependency of another one, the other sets
+  # RUNFILES_MANIFEST_FILE or RUNFILES_DIR for our sake.
+  manifest = ENV['RUNFILES_MANIFEST_FILE']
+  if manifest
+    return ['RUNFILES_MANIFEST_FILE', manifest]
+  end
+
+  dir = ENV['RUNFILES_DIR']
+  if dir
+    return ['RUNFILES_DIR', dir]
+  end
+
+  # Look for the runfiles "output" manifest, argv[0] + ".runfiles_manifest"
+  manifest = runfiles + '_manifest'
+  if File.exists?(manifest)
+    return ['RUNFILES_MANIFEST_FILE', manifest]
+  end
+
+  # Look for the runfiles "input" manifest, argv[0] + ".runfiles/MANIFEST"
+  manifest = File.join(runfiles, 'MANIFEST')
+  if File.exists?(manifest)
+    return ['RUNFILES_DIR', manifest] 
+  end
+
+  # If running in a sandbox and no environment variables are set, then
+  # Look for the runfiles  next to the binary.
+  if runfiles.end_with?('.runfiles') and File.directory?(runfiles)
+    return ['RUNFILES_DIR', module_space]
+  end
+end
+
+def find_ruby_binary
+  File.join(
+    RbConfig::CONFIG['bindir'],
+    RbConfig::CONFIG['ruby_install_name'],
+  )
+end
+
+def main(args)
+  custom_loadpaths = {loadpaths}
+  runfiles = find_runfiles
+
+  loadpaths = create_loadpath_entries(custom_loadpaths, runfiles)
+  loadpaths += get_repository_imports(runfiles)
+  loadpaths += ENV['RUBYLIB'].split(':') if ENV.key?('RUBYLIB')
+  ENV['RUBYLIB'] = loadpaths.join(':')
+
+  runfiles_envkey, runfiles_envvalue = runfiles_envvar(runfiles)
+  ENV[runfiles_envkey] = runfiles_envvalue if runfiles_envkey
+
+  ruby_program = find_ruby_binary
+
+  main = {main}
+  main = File.join(runfiles, main)
+  rubyopt = {rubyopt}
+  exec(ruby_program, '--disable-gems', *rubyopt, main, *args)
+  # TODO(yugui) Support windows
+end
+
+if __FILE__ == $0
   main(ARGV)
 end
-
-$PATH_PREFIX{interpreter} --disable-gems {init_flags} {rubyopt} -I${PATH_PREFIX} {main} "$@"

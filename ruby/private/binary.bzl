@@ -6,11 +6,15 @@ load(
 )
 
 
+def _to_manifest_path(ctx, file):
+  if file.short_path.startswith("../"):
+    return file.short_path[3:]
+  else:
+    return "%s/%s" % (ctx.workspace_name, file.short_path)
+
 def _ruby_binary_impl(ctx):
   sdk = ctx.toolchains[TOOLCHAIN_TYPE_NAME].ruby_runtime
   interpreter = sdk.interpreter[DefaultInfo].files_to_run.executable
-  init_files = [f for t in sdk.init_files for f in t.files.to_list()]
-  init_flags = " ".join(["-r${PATH_PREFIX}%s" % f.short_path for f in init_files])
 
   main = ctx.file.main
   if not main:
@@ -29,26 +33,19 @@ def _ruby_binary_impl(ctx):
   executable = ctx.actions.declare_file(ctx.attr.name)
   deps = _transitive_deps(
       ctx,
-      extra_files = init_files + [
-          interpreter,
-          executable,
-          ctx.file._runfiles_bash,
-      ],
-      extra_deps = sdk.init_files + [sdk.interpreter],
+      extra_files = [interpreter, executable],
+      extra_deps = [sdk.interpreter],
   )
 
   rubyopt = reversed(deps.rubyopt.to_list())
-  rubyopt += ["-I${PATH_PREFIX}%s" % inc for inc in deps.incpaths.to_list()]
 
   ctx.actions.expand_template(
       template = ctx.file._wrapper_template,
       output = executable,
       substitutions = {
-          "{interpreter}": interpreter.short_path,
-          "{init_flags}": init_flags,
-          "{rubyopt}": " ".join(rubyopt),
-          "{main}": main.short_path,
-          "{workspace_name}": ctx.label.workspace_name or ctx.workspace_name,
+          "{loadpaths}": repr(deps.incpaths.to_list()),
+          "{rubyopt}": repr(rubyopt),
+          "{main}": repr(_to_manifest_path(ctx, main)),
       },
       is_executable = True,
   )
