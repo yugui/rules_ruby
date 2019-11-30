@@ -1,6 +1,5 @@
-#!/usr/bin/env pythonn
-
-# Ruby-port of the Bazel's wrapper script for Python
+#!/usr/bin/env bash
+# Ruby-port of the Bazel's wrapper script for nodejs and the one for python
 
 # Copyright 2017 The Bazel Authors. All rights reserved.
 # Copyright 2019 BazelRuby Authors. All rights reserved.
@@ -18,32 +17,90 @@
 # limitations under the License.
 #
 
+# Immediately exit if any command fails.
+set -e
 
-def find_module_space
-  stub_filename = File.absolute_path($0)
-  module_space = "#{stub_filename}.runfiles"
-  loop do
-    case
-    when File.dir?(module_space)
-      return module_space
-    when %r!(.*\.runfiles)/.*!o =~ stub_filename
-      return $1
-    when File.symlink?(stub_filename)
-      target = File.readlink(stub_filename)
-      stub_filename = File.absolute_path(target, File.dirname(stub_filename))
-    else
-      break
-    end
-  end
-  raise "Cannot find .runfiles directory for #{$0}"
-end
+# --- begin runfiles.bash initialization ---
+# Source the runfiles library:
+# https://github.com/bazelbuild/bazel/blob/master/tools/bash/runfiles/runfiles.bash
+# The runfiles library defines rlocation, which is a platform independent function
+# used to lookup the runfiles locations. This code snippet is needed at the top
+# of scripts that use rlocation to lookup the location of runfiles.bash and source it
+if [[ ! -d "${RUNFILES_DIR:-/dev/null}" && ! -f "${RUNFILES_MANIFEST_FILE:-/dev/null}" ]]; then
+    if [[ -f "$0.runfiles_manifest" ]]; then
+      export RUNFILES_MANIFEST_FILE="$0.runfiles_manifest"
+    elif [[ -f "$0.runfiles/MANIFEST" ]]; then
+      export RUNFILES_MANIFEST_FILE="$0.runfiles/MANIFEST"
+    elif [[ -f "$0.runfiles/bazel_tools/tools/bash/runfiles/runfiles.bash" ]]; then
+      export RUNFILES_DIR="$0.runfiles"
+    fi
+fi
+if [[ -f "${RUNFILES_DIR:-/dev/null}/bazel_tools/tools/bash/runfiles/runfiles.bash" ]]; then
+  source "${RUNFILES_DIR}/bazel_tools/tools/bash/runfiles/runfiles.bash"
+elif [[ -f "${RUNFILES_MANIFEST_FILE:-/dev/null}" ]]; then
+  source "$(grep -m1 "^bazel_tools/tools/bash/runfiles/runfiles.bash " \
+            "$RUNFILES_MANIFEST_FILE" | cut -d ' ' -f 2-)"
+else
+  echo >&2 "ERROR: cannot find @bazel_tools//tools/bash/runfiles:runfiles.bash"
+  exit 1
+fi
+# --- end runfiles.bash initialization ---
 
-def main(args)
-  module_space = find_module_space
-end
+function find_runfiles() {
+  local self
+  case "$1" in
+    /*) self="$1" ;;
+    *) self="$PWD/$1" ;;
+  esac
 
-if $0 == __file__
-  main(ARGV)
-end
+  if [[ -n "${RUNFILES_MANIFEST_ONLY+x}" ]]; then
+    # Windows only has a manifest file instead of symlinks.
+    runfiles=${RUNFILES_MANIFEST_FILE%/MANIFEST}
+  elif [[ -n "${TEST_SRCDIR+x}" ]]; then
+    # Case 4, bazel has identified runfiles for us.
+    runfiles="${TEST_SRCDIR}"
+  else
+    while true; do
+      if [[ -e "$self.runfiles" ]]; then
+        runfiles="$self.runfiles"
+        break
+      fi
 
+      if [[ $self == *.runfiles/* ]]; then
+        runfiles="${self%%.runfiles/*}.runfiles"
+        # don't break; this is a last resort for case 6b
+      fi
+
+      if [[ ! -L "$self" ]]; then
+        break;
+      fi
+
+      readlink="$(readlink "$self")"
+      if [[ "$readlink" = /* ]]; then
+        self="$readlink"
+      else
+        # resolve relative symlink
+        self="${self%%/*}/$readlink"
+      fi
+    done
+
+    if [[ -z "$runfiles" ]]; then
+      echo " >>>> FAIL: RUNFILES environment variable is not set. <<<<" >&2
+      exit 1
+    fi
+  fi
+  echo -n "$runfiles"
+}
+
+function main() {
+  local moulde_space
+  runfiles=$(find_runfiles $0)
+}
+
+exec env -i \
+  RUNFILES="$runfiles"
+  {interpreter} \
+  --disable-gems \
+  {init_flags} \
+  {rubyopt} \
 $PATH_PREFIX{interpreter} --disable-gems {init_flags} {rubyopt} -I${PATH_PREFIX} {main} "$@"
