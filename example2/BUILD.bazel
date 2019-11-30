@@ -1,0 +1,39 @@
+load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
+load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
+
+py_binary(
+    name = "test_script",
+    srcs = ["test.py"],
+    main = "test.py",
+)
+
+pkg_tar(
+    name = "test_script_tar",
+    srcs = [
+        "example_js",
+        ":test_script",
+    ],
+    include_runfiles = True,
+)
+
+nodejs_binary(
+    name = "example_js",
+    data = ["example.js"],
+    entry_point = "example.js",
+)
+
+sh_test(
+    name = "test_test",
+    srcs = ["test.sh"],
+)
+
+sh_binary(
+    name = "runfiles_test",
+    srcs = ["runfiles_test.sh"],
+    data = [
+        "@org_ruby_lang_ruby_host//:ruby_bin",
+    ],
+    deps = [
+        "@bazel_tools//tools/bash/runfiles",
+    ],
+)
